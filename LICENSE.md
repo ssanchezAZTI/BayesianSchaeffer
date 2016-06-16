@@ -1,1 +1,0 @@
-# BayesianSchaeffer license

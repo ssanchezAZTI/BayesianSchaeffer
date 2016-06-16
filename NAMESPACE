@@ -1,0 +1,21 @@
+import("rjags")
+import("fields")
+import("calibrate")
+import("MASS")
+
+export(
+  "calc.biomass",
+  "calc.nuisance",
+  "ff",
+  "jags2coda",
+  "pellatom.inits",
+  "plot.chain",
+  "proj.biomass"
+)
+
+#exportMethods(
+#)
+
+#exportClasses(
+#)
+

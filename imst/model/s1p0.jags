@@ -1,0 +1,84 @@
+# Bayesian Schaeffer surplus production model in JAGS (with fixed P0)
+# BayesianSchaeffer/imst/model/s1p0.jags 
+
+# Copyright 2015 AZTI Team. Distributed under the GPL 2 or later 
+# Maintainer: Leire Ibaibarriaga (libaibarriaga@azti.es) 
+# $Id: s1.jags 05/11/2015 libaibarriaga $ 
+
+
+data{
+
+for (i in 1:n){
+  logI[i] <- log(I[i])
+}
+for (i in 1:n){
+  ones[i] <- 1
+}
+
+}
+
+model{
+
+#######################################################
+#   Likelihood
+#######################################################
+
+for (i in 1:n){
+  logI[i] ~ dnorm(mu.logI[i], psi.logI)
+  mu.logI[i] <- logQ + logP[i]
+#  mu.logI[i] <- logq + logk + logP[i]
+}
+
+#######################################################
+#   Population dynamics model (state equations)
+#   and restrictions due to catches
+#######################################################
+
+mu.P[1] <- P0
+mupos.P[1] <- P0
+dif[1] <- 0.0
+mu.logP[1] <- log(mupos.P[1])
+logP[1] ~ dnorm(mu.logP[1], psi.logP)
+prob[1] <- step(mu.P[1])
+ones[1] ~ dbern(prob[1])
+P[1] <- exp(logP[1])
+
+for (i in 2:n){
+  mu.P[i] <- P[i-1]+r*P[i-1]*(1-P[i-1])-C[i-1]/k
+  mupos.P[i] <- max(mu.P[i], 0.000001)
+  dif[i] <- mu.P[i]-mupos.P[i]   # to check that they are the same in the results. if we use mu.logP[i] <- log(mu.P[i]) it gives errors at initialization
+  prob[i] <- step(mu.P[i])
+  ones[i] ~ dbern(prob[i])
+  mu.logP[i] <- log(mupos.P[i])
+  logP[i] ~ dnorm(mu.logP[i], psi.logP)
+  P[i] <- exp(logP[i])
+}
+
+#######################################################
+#   Priors
+#######################################################
+
+#P0 ~ dunif(a.P0,b.P0)
+
+logr ~ dnorm(mu.logr, psi.logr)
+logk ~ dnorm(mu.logk, psi.logk)
+logQ ~ dnorm(mu.logQ, psi.logQ)
+#logq ~ dnorm(mu.logq, psi.logq)
+
+psi.logI ~ dgamma(a.psi.logI, b.psi.logI)
+psi.logP ~ dgamma(a.psi.logP, b.psi.logP)
+
+r <- exp(logr)
+k <- exp(logk)
+Q <- exp(logQ)
+#q <- exp(logq)
+
+q <- Q/k
+#Q <- q*k
+
+Fmsy <- r/2
+Bmsy <- k/2
+MSY <- r*k/4
+
+}
+
